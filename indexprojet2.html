@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <p style="font-display: block;">Ce site à été créé avec IA</p>
+  <meta charset="UTF-8">
+  <title>Mini Jeux</title>
+  <style>
+    body { background: #f5f7fa; font-family: Arial, sans-serif; text-align: center; }
+    h1 { color: #2d5be3; }
+    .menu { margin: 2em 0; }
+    .menu button { margin: 1em; padding: 1em 2em; font-size: 1.1em; border-radius: 8px; border: none; background: #2d5be3; color: #fff; cursor: pointer; }
+    .menu button:hover { background: #1741a6; }
+    .back { margin: 2em 0; }
+    .back button { padding: 0.5em 1.5em; border-radius: 8px; border: none; background: #888; color: #fff; cursor: pointer; }
+    .back button:hover { background: #444; }
+    .board, .c4-board { display: grid; gap: 8px; justify-content: center; margin: 2rem auto; }
+    .board { grid-template-columns: repeat(3, 80px); grid-template-rows: repeat(3, 80px);}
+    .cell { background: #fff; border: 2px solid #2d5be3; font-size: 2.5rem; color: #2d5be3; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 10px; height: 80px; width: 80px; user-select: none; }
+    .cell:hover { background: #e3edff; }
+    .status { margin: 1rem 0; font-size: 1.2rem; }
+    .c4-board { grid-template-columns: repeat(7, 50px); grid-template-rows: repeat(6, 50px);}
+    .c4-cell { background: #fff; border: 2px solid #2d5be3; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 2rem; cursor: pointer; }
+    .c4-cell.R { background: #e74c3c; }
+    .c4-cell.J { background: #f1c40f; }
+    .c4-cell:hover { background: #e3edff; }
+    .rps-btn { font-size: 2rem; margin: 0.5em 1em; padding: 0.5em 1em; border-radius: 8px; border: 2px solid #2d5be3; background: #fff; color: #2d5be3; cursor: pointer; }
+    .rps-btn:hover { background: #e3edff; }
+    .bn-board { display: grid; grid-template-columns: repeat(6, 32px); grid-template-rows: repeat(6, 32px); gap: 2px; margin: 1em auto; }
+    .bn-cell { width: 32px; height: 32px; border: 1px solid #2d5be3; background: #fff; cursor: pointer; font-size: 1.1em; border-radius: 4px; }
+    .bn-cell.ship { background: #b3e5fc; }
+    .bn-cell.hit { background: #e74c3c; color: #fff; }
+    .bn-cell.miss { background: #bbb; color: #fff; }
+    .bn-cell:hover { background: #e3edff; }
+  </style>
+</head>
+<body>
+  <h1>Mini Jeux</h1>
+  <div class="menu" id="mainMenu">
+    <button onclick="showGame('morpion')">Morpion</button>
+    <button onclick="showGame('puissance4')">Puissance 4</button>
+    <button onclick="showGame('rps')">Pierre-Feuille-Ciseaux</button>
+    <button onclick="showGame('bn')">Bataille Navale</button>
+  </div>
+
+  <!-- Morpion -->
+  <div id="morpionMenu" style="display:none;">
+    <h2>Morpion</h2>
+    <button onclick="startMorpion('local')">2 Joueurs</button>
+    <button onclick="startMorpion('bot')">Contre le Bot</button>
+    <div class="back"><button onclick="backToMenu()">Retour</button></div>
+  </div>
+  <div id="morpionGame" style="display:none;">
+    <div class="status" id="morpionStatus"></div>
+    <div class="board" id="morpionBoard"></div>
+    <button onclick="resetMorpion()">Recommencer</button>
+    <div class="back"><button onclick="backToMenu()">Menu</button></div>
+  </div>
+
+  <!-- Puissance 4 -->
+  <div id="puissance4Menu" style="display:none;">
+    <h2>Puissance 4</h2>
+    <button onclick="startC4('local')">2 Joueurs</button>
+    <button onclick="startC4('bot')">Contre le Bot</button>
+    <div class="back"><button onclick="backToMenu()">Retour</button></div>
+  </div>
+  <div id="puissance4Game" style="display:none;">
+    <div class="status" id="c4Status"></div>
+    <div class="c4-board" id="c4Board"></div>
+    <button onclick="resetC4()">Recommencer</button>
+    <div class="back"><button onclick="backToMenu()">Menu</button></div>
+  </div>
+
+  <!-- Pierre-Feuille-Ciseaux -->
+  <div id="rpsMenu" style="display:none;">
+    <h2>Pierre-Feuille-Ciseaux</h2>
+    <button onclick="startRPS('local')">2 Joueurs</button>
+    <button onclick="startRPS('bot')">Contre le Bot</button>
+    <div class="back"><button onclick="backToMenu()">Retour</button></div>
+  </div>
+  <div id="rpsGame" style="display:none;">
+    <div class="status" id="rpsStatus"></div>
+    <div id="rpsBtns"></div>
+    <button onclick="resetRPS()">Recommencer</button>
+    <div class="back"><button onclick="backToMenu()">Menu</button></div>
+  </div>
+
+  <!-- Bataille Navale -->
+  <div id="bnMenu" style="display:none;">
+    <h2>Bataille Navale</h2>
+    <button onclick="startBN('local')">2 Joueurs</button>
+    <button onclick="startBN('bot')">Contre le Bot</button>
+    <div class="back"><button onclick="backToMenu()">Retour</button></div>
+  </div>
+  <div id="bnGame" style="display:none;">
+    <div class="status" id="bnStatus"></div>
+    <div style="display:flex; justify-content:center; gap:2em;">
+      <div>
+        <div>Votre grille</div>
+        <div class="bn-board" id="bnPlayerBoard"></div>
+      </div>
+      <div>
+        <div>Grille adverse</div>
+        <div class="bn-board" id="bnOpponentBoard"></div>
+      </div>
+    </div>
+    <button onclick="resetBN()">Recommencer</button>
+    <div class="back"><button onclick="backToMenu()">Menu</button></div>
+  </div>
+
+  <script>
+    // Navigation
+    function showGame(game) {
+      document.getElementById('mainMenu').style.display = 'none';
+      document.getElementById(game + 'Menu').style.display = '';
+      if(game==='bn') resetBN();
+    }
+    function backToMenu() {
+      ['morpionMenu','morpionGame','puissance4Menu','puissance4Game','rpsMenu','rpsGame','bnMenu','bnGame'].forEach(id=>document.getElementById(id).style.display='none');
+      document.getElementById('mainMenu').style.display = '';
+    }
+
+    // --- MORPION ---
+    let morpionBoard = Array(9).fill('');
+    let morpionPlayer = 'X';
+    let morpionActive = true;
+    let morpionMode = 'local';
+
+    function startMorpion(mode) {
+      morpionMode = mode;
+      morpionBoard = Array(9).fill('');
+      morpionPlayer = 'X';
+      morpionActive = true;
+      document.getElementById('morpionMenu').style.display = 'none';
+      document.getElementById('morpionGame').style.display = '';
+      renderMorpion();
+      document.getElementById('morpionStatus').textContent = "Joueur X commence !";
+    }
+    function renderMorpion() {
+      const boardDiv = document.getElementById('morpionBoard');
+      boardDiv.innerHTML = '';
+      morpionBoard.forEach((cell, idx) => {
+        const cellDiv = document.createElement('div');
+        cellDiv.className = 'cell';
+        cellDiv.textContent = cell;
+        cellDiv.onclick = () => morpionClick(idx);
+        boardDiv.appendChild(cellDiv);
+      });
+    }
+    function morpionClick(idx) {
+      if (!morpionActive || morpionBoard[idx]) return;
+      morpionBoard[idx] = morpionPlayer;
+      renderMorpion();
+      if (checkMorpionWin(morpionPlayer)) {
+        document.getElementById('morpionStatus').textContent = `Le joueur ${morpionPlayer} gagne !`;
+        morpionActive = false;
+        return;
+      }
+      if (morpionBoard.every(cell => cell)) {
+        document.getElementById('morpionStatus').textContent = "Match nul !";
+        morpionActive = false;
+        return;
+      }
+      morpionPlayer = morpionPlayer === 'X' ? 'O' : 'X';
+      if (morpionMode === 'bot' && morpionPlayer === 'O' && morpionActive) {
+        setTimeout(morpionBot, 400);
+      } else {
+        document.getElementById('morpionStatus').textContent = `Au tour du joueur ${morpionPlayer}`;
+      }
+    }
+    function morpionBot() {
+      // Bot: gagne si possible, bloque sinon, sinon joue au hasard
+      for (let i = 0; i < 9; i++) {
+        if (!morpionBoard[i]) {
+          morpionBoard[i] = 'O';
+          if (checkMorpionWin('O')) { renderMorpion(); morpionActive = false; document.getElementById('morpionStatus').textContent = "Le bot gagne !"; return; }
+          morpionBoard[i] = '';
+        }
+      }
+      for (let i = 0; i < 9; i++) {
+        if (!morpionBoard[i]) {
+          morpionBoard[i] = 'X';
+          if (checkMorpionWin('X')) { morpionBoard[i] = 'O'; renderMorpion(); morpionPlayer = 'X'; document.getElementById('morpionStatus').textContent = "À toi de jouer !"; return; }
+          morpionBoard[i] = '';
+        }
+      }
+      let empty = morpionBoard.map((v, i) => v === '' ? i : null).filter(i => i !== null);
+      let idx = empty[Math.floor(Math.random() * empty.length)];
+      morpionBoard[idx] = 'O';
+      renderMorpion();
+      if (checkMorpionWin('O')) { morpionActive = false; document.getElementById('morpionStatus').textContent = "Le bot gagne !"; return; }
+      if (morpionBoard.every(cell => cell)) { morpionActive = false; document.getElementById('morpionStatus').textContent = "Match nul !"; return; }
+      morpionPlayer = 'X';
+      document.getElementById('morpionStatus').textContent = "À toi de jouer !";
+    }
+    function checkMorpionWin(p) {
+      const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+      return wins.some(line => line.every(i => morpionBoard[i] === p));
+    }
+    function resetMorpion() {
+      morpionBoard = Array(9).fill('');
+      morpionPlayer = 'X';
+      morpionActive = true;
+      renderMorpion();
+      document.getElementById('morpionStatus').textContent = "Joueur X commence !";
+    }
+
+    // --- PUISSANCE 4 ---
+    let c4Board = Array(6).fill().map(()=>Array(7).fill(''));
+    let c4Player = 'R';
+    let c4Active = true;
+    let c4Mode = 'local';
+
+    function startC4(mode) {
+      c4Mode = mode;
+      c4Board = Array(6).fill().map(()=>Array(7).fill(''));
+      c4Player = 'R';
+      c4Active = true;
+      document.getElementById('puissance4Menu').style.display = 'none';
+      document.getElementById('puissance4Game').style.display = '';
+      renderC4();
+      document.getElementById('c4Status').textContent = "Rouge commence !";
+    }
+    function renderC4() {
+      const boardDiv = document.getElementById('c4Board');
+      boardDiv.innerHTML = '';
+      for (let row = 0; row < 6; row++) {
+        for (let col = 0; col < 7; col++) {
+          const cellDiv = document.createElement('div');
+          cellDiv.className = 'c4-cell' + (c4Board[row][col] ? ' ' + c4Board[row][col] : '');
+          cellDiv.onclick = () => c4Click(col);
+          cellDiv.textContent = '';
+          boardDiv.appendChild(cellDiv);
+        }
+      }
+    }
+    function c4Click(col) {
+      if (!c4Active) return;
+      for (let row = 5; row >= 0; row--) {
+        if (!c4Board[row][col]) {
+          c4Board[row][col] = c4Player;
+          break;
+        }
+      }
+      renderC4();
+      if (checkC4Win(c4Player)) {
+        document.getElementById('c4Status').textContent = (c4Player === 'R' ? "Rouge" : "Jaune") + " gagne !";
+        c4Active = false;
+        return;
+      }
+      if (c4Board.every(row => row.every(cell => cell))) {
+        document.getElementById('c4Status').textContent = "Match nul !";
+        c4Active = false;
+        return;
+      }
+      c4Player = c4Player === 'R' ? 'J' : 'R';
+      if (c4Mode === 'bot' && c4Player === 'J' && c4Active) {
+        setTimeout(c4Bot, 500);
+      } else {
+        document.getElementById('c4Status').textContent = (c4Player === 'R' ? "Rouge" : "Jaune") + " à toi !";
+      }
+    }
+    function c4Bot() {
+      // 1. Cherche à gagner
+      for (let col = 0; col < 7; col++) {
+        let tempBoard = c4Board.map(row => row.slice());
+        for (let row = 5; row >= 0; row--) {
+          if (!tempBoard[row][col]) {
+            tempBoard[row][col] = 'J';
+            if (checkC4WinBot(tempBoard, 'J')) {
+              c4Board[row][col] = 'J';
+              renderC4();
+              if (checkC4Win('J')) { c4Active = false; document.getElementById('c4Status').textContent = "Le bot (Jaune) gagne !"; return; }
+              if (c4Board.every(row => row.every(cell => cell))) { c4Active = false; document.getElementById('c4Status').textContent = "Match nul !"; return; }
+              c4Player = 'R';
+              document.getElementById('c4Status').textContent = "Rouge à toi !";
+              return;
+            }
+            break;
+          }
+        }
+      }
+      // 2. Bloque l'adversaire si possible
+      for (let col = 0; col < 7; col++) {
+        let tempBoard = c4Board.map(row => row.slice());
+        for (let row = 5; row >= 0; row--) {
+          if (!tempBoard[row][col]) {
+            tempBoard[row][col] = 'R';
+            if (checkC4WinBot(tempBoard, 'R')) {
+              c4Board[row][col] = 'J';
+              renderC4();
+              if (checkC4Win('J')) { c4Active = false; document.getElementById('c4Status').textContent = "Le bot (Jaune) gagne !"; return; }
+              if (c4Board.every(row => row.every(cell => cell))) { c4Active = false; document.getElementById('c4Status').textContent = "Match nul !"; return; }
+              c4Player = 'R';
+              document.getElementById('c4Status').textContent = "Rouge à toi !";
+              return;
+            }
+            break;
+          }
+        }
+      }
+      // 3. Sinon, joue au hasard
+      let cols = [];
+      for (let col = 0; col < 7; col++) if (!c4Board[0][col]) cols.push(col);
+      let col = cols[Math.floor(Math.random() * cols.length)];
+      for (let row = 5; row >= 0; row--) {
+        if (!c4Board[row][col]) {
+          c4Board[row][col] = 'J';
+          break;
+        }
+      }
+      renderC4();
+      if (checkC4Win('J')) { c4Active = false; document.getElementById('c4Status').textContent = "Le bot (Jaune) gagne !"; return; }
+      if (c4Board.every(row => row.every(cell => cell))) { c4Active = false; document.getElementById('c4Status').textContent = "Match nul !"; return; }
+      c4Player = 'R';
+      document.getElementById('c4Status').textContent = "Rouge à toi !";
+    }
+
+    // Fonction utilitaire pour vérifier la victoire sur un plateau temporaire
+    function checkC4WinBot(board, p) {
+      for (let r = 0; r < 6; r++) for (let c = 0; c < 4; c++)
+        if ([0,1,2,3].every(i => board[r][c+i] === p)) return true;
+      for (let r = 0; r < 3; r++) for (let c = 0; c < 7; c++)
+        if ([0,1,2,3].every(i => board[r+i][c] === p)) return true;
+      for (let r = 0; r < 3; r++) for (let c = 0; c < 4; c++)
+        if ([0,1,2,3].every(i => board[r+i][c+i] === p)) return true;
+      for (let r = 3; r < 6; r++) for (let c = 0; c < 4; c++)
+        if ([0,1,2,3].every(i => board[r-i][c+i] === p)) return true;
+      return false;
+    }
+    function checkC4Win(p) {
+      // Horizontal, vertical, diagonal
+      for (let r = 0; r < 6; r++) for (let c = 0; c < 4; c++)
+        if ([0,1,2,3].every(i => c4Board[r][c+i] === p)) return true;
+      for (let r = 0; r < 3; r++) for (let c = 0; c < 7; c++)
+        if ([0,1,2,3].every(i => c4Board[r+i][c] === p)) return true;
+      for (let r = 0; r < 3; r++) for (let c = 0; c < 4; c++)
+        if ([0,1,2,3].every(i => c4Board[r+i][c+i] === p)) return true;
+      for (let r = 3; r < 6; r++) for (let c = 0; c < 4; c++)
+        if ([0,1,2,3].every(i => c4Board[r-i][c+i] === p)) return true;
+      return false;
+    }
+    function resetC4() {
+      c4Board = Array(6).fill().map(()=>Array(7).fill(''));
+      c4Player = 'R';
+      c4Active = true;
+      renderC4();
+      document.getElementById('c4Status').textContent = "Rouge commence !";
+    }
+
+    // --- PIERRE FEUILLE CISEAUX ---
+    let rpsMode = 'local';
+    let rpsStep = 0;
+    let rpsChoice1 = '';
+    let rpsChoice2 = '';
+    function startRPS(mode) {
+      rpsMode = mode;
+      rpsStep = 0;
+      rpsChoice1 = '';
+      rpsChoice2 = '';
+      document.getElementById('rpsMenu').style.display = 'none';
+      document.getElementById('rpsGame').style.display = '';
+      document.getElementById('rpsStatus').textContent = (mode === 'bot') ? "Fais ton choix !" : "Joueur 1, fais ton choix !";
+      renderRPSBtns();
+    }
+    function renderRPSBtns() {
+      const btns = ['✊','✋','✌️'];
+      let html = '';
+      btns.forEach((b,i) => {
+        html += `<button class="rps-btn" onclick="rpsClick(${i})">${b}</button>`;
+      });
+      document.getElementById('rpsBtns').innerHTML = html;
+    }
+    function rpsClick(choice) {
+      const choices = ['Pierre','Feuille','Ciseaux'];
+      if (rpsMode === 'bot') {
+        rpsChoice1 = choice;
+        let bot = Math.floor(Math.random()*3);
+        rpsChoice2 = bot;
+        let res = rpsResult(rpsChoice1, rpsChoice2);
+        document.getElementById('rpsStatus').textContent = `Toi : ${choices[rpsChoice1]} | Bot : ${choices[rpsChoice2]} → ${res}`;
+      } else {
+        if (rpsStep === 0) {
+          rpsChoice1 = choice;
+          rpsStep = 1;
+          document.getElementById('rpsStatus').textContent = "Joueur 2, fais ton choix !";
+        } else {
+          rpsChoice2 = choice;
+          let res = rpsResult(rpsChoice1, rpsChoice2);
+          document.getElementById('rpsStatus').textContent = `J1 : ${choices[rpsChoice1]} | J2 : ${choices[rpsChoice2]} → ${res}`;
+          rpsStep = 0;
+        }
+      }
+    }
+    function rpsResult(a, b) {
+      if (a === b) return "Égalité !";
+      if ((a === 0 && b === 2) || (a === 1 && b === 0) || (a === 2 && b === 1)) return "Gagné !";
+      return "Perdu !";
+    }
+    function resetRPS() {
+      rpsStep = 0;
+      rpsChoice1 = '';
+      rpsChoice2 = '';
+      document.getElementById('rpsStatus').textContent = (rpsMode === 'bot') ? "Fais ton choix !" : "Joueur 1, fais ton choix !";
+      renderRPSBtns();
+    }
+
+    // --- BATAILLE NAVALE ---
+    let bnSize = 6;
+    let bnShips = 3;
+    let bnShipLen = 2;
+    let bnMode = 'local';
+    let bnStep = 0; // 0: placement J1, 1: placement J2/bot, 2: jeu
+    let bnBoards = [[],[]]; // [joueur, adversaire]
+    let bnShots = [[],[]];  // [joueur, adversaire]
+    let bnTurn = 0; // 0: joueur, 1: adversaire
+    let bnPlaced = 0;
+    let bnCurrentShip = [];
+    let bnGameActive = true;
+
+    function startBN(mode) {
+      bnMode = mode;
+      bnStep = 0;
+      bnBoards = [Array(bnSize).fill().map(()=>Array(bnSize).fill(0)), Array(bnSize).fill().map(()=>Array(bnSize).fill(0))];
+      bnShots = [Array(bnSize).fill().map(()=>Array(bnSize).fill(0)), Array(bnSize).fill().map(()=>Array(bnSize).fill(0))];
+      bnTurn = 0;
+      bnPlaced = 0;
+      bnCurrentShip = [];
+      bnGameActive = true;
+      document.getElementById('bnMenu').style.display = 'none';
+      document.getElementById('bnGame').style.display = '';
+      document.getElementById('bnStatus').textContent = "Placez vos 3 bateaux (2 cases chacun)";
+      renderBNBoards();
+    }
+
+    function renderBNBoards() {
+      // Joueur
+      let html = '';
+      for(let r=0;r<bnSize;r++) for(let c=0;c<bnSize;c++) {
+        let cl = "bn-cell";
+        if(bnBoards[0][r][c]===1) cl+=" ship";
+        if(bnShots[0][r][c]===2) cl+=" hit";
+        if(bnShots[0][r][c]===1) cl+=" miss";
+        html += `<div class="${cl}" onclick="bnPlaceShip(${r},${c})">${bnShots[0][r][c]===2?'✖️':bnShots[0][r][c]===1?'•':''}</div>`;
+      }
+      document.getElementById('bnPlayerBoard').innerHTML = html;
+      // Adversaire
+      html = '';
+      for(let r=0;r<bnSize;r++) for(let c=0;c<bnSize;c++) {
+        let cl = "bn-cell";
+        if(bnShots[1][r][c]===2) cl+=" hit";
+        if(bnShots[1][r][c]===1) cl+=" miss";
+        html += `<div class="${cl}" onclick="bnFire(${r},${c})">${bnShots[1][r][c]===2?'✖️':bnShots[1][r][c]===1?'•':''}</div>`;
+      }
+      document.getElementById('bnOpponentBoard').innerHTML = html;
+    }
+
+    function bnPlaceShip(r,c) {
+      if(bnStep===0 && bnPlaced<bnShips) {
+        if(bnBoards[0][r][c]===1) return;
+        if(bnCurrentShip.length===0) {
+          bnCurrentShip.push([r,c]);
+          bnBoards[0][r][c]=1;
+        } else if(bnCurrentShip.length===1) {
+          let [r0,c0]=bnCurrentShip[0];
+          if((Math.abs(r-r0)+Math.abs(c-c0))!==1) return;
+          bnCurrentShip.push([r,c]);
+          bnBoards[0][r][c]=1;
+          bnPlaced++;
+          bnCurrentShip=[];
+          if(bnPlaced===bnShips) {
+            if(bnMode==='local') {
+              bnStep=1; bnPlaced=0; bnBoards[1]=Array(bnSize).fill().map(()=>Array(bnSize).fill(0));
+              document.getElementById('bnStatus').textContent = "Joueur 2 : placez vos 3 bateaux";
+            } else {
+              bnStep=2; bnBotPlaceShips();
+              document.getElementById('bnStatus').textContent = "À vous de tirer !";
+            }
+          }
+        }
+        renderBNBoards();
+      } else if(bnStep===1 && bnMode==='local' && bnPlaced<bnShips) {
+        if(bnBoards[1][r][c]===1) return;
+        if(bnCurrentShip.length===0) {
+          bnCurrentShip.push([r,c]);
+          bnBoards[1][r][c]=1;
+        } else if(bnCurrentShip.length===1) {
+          let [r0,c0]=bnCurrentShip[0];
+          if((Math.abs(r-r0)+Math.abs(c-c0))!==1) return;
+          bnCurrentShip.push([r,c]);
+          bnBoards[1][r][c]=1;
+          bnPlaced++;
+          bnCurrentShip=[];
+          if(bnPlaced===bnShips) {
+            bnStep=2; bnTurn=0; bnGameActive=true;
+            document.getElementById('bnStatus').textContent = "Joueur 1 : à vous de tirer !";
+          }
+        }
+        renderBNBoards();
+      }
+    }
+
+    function bnBotPlaceShips() {
+      let placed=0;
+      while(placed<bnShips) {
+        let r=Math.floor(Math.random()*bnSize),c=Math.floor(Math.random()*bnSize);
+        let dirs=[[0,1],[1,0],[0,-1],[-1,0]];
+        let dir=dirs[Math.floor(Math.random()*4)];
+        let r2=r+dir[0],c2=c+dir[1];
+        if(r2<0||r2>=bnSize||c2<0||c2>=bnSize) continue;
+        if(bnBoards[1][r][c]===0 && bnBoards[1][r2][c2]===0) {
+          bnBoards[1][r][c]=1; bnBoards[1][r2][c2]=1; placed++;
+        }
+      }
+    }
+
+    function bnFire(r,c) {
+      if(!bnGameActive || bnStep<2) return;
+      if(bnMode==='local' && bnTurn===0) {
+        if(bnShots[1][r][c]) return;
+        if(bnBoards[1][r][c]===1) { bnShots[1][r][c]=2; }
+        else { bnShots[1][r][c]=1; bnTurn=1; }
+        renderBNBoards();
+        if(bnCheckWin(1)) { document.getElementById('bnStatus').textContent="Joueur 1 a gagné !"; bnGameActive=false; return; }
+        if(bnTurn===1) document.getElementById('bnStatus').textContent="Joueur 2 : à vous de tirer !";
+      } else if(bnMode==='local' && bnTurn===1) {
+        if(bnShots[0][r][c]) return;
+        if(bnBoards[0][r][c]===1) { bnShots[0][r][c]=2; }
+        else { bnShots[0][r][c]=1; bnTurn=0; }
+        renderBNBoards();
+        if(bnCheckWin(0)) { document.getElementById('bnStatus').textContent="Joueur 2 a gagné !"; bnGameActive=false; return; }
+        if(bnTurn===0) document.getElementById('bnStatus').textContent="Joueur 1 : à vous de tirer !";
+      } else if(bnMode==='bot' && bnTurn===0) {
+        if(bnShots[1][r][c]) return;
+        if(bnBoards[1][r][c]===1) { bnShots[1][r][c]=2; }
+        else { bnShots[1][r][c]=1; bnTurn=1; }
+        renderBNBoards();
+        if(bnCheckWin(1)) { document.getElementById('bnStatus').textContent="Bravo, tu as gagné !"; bnGameActive=false; return; }
+        if(bnTurn===1) { document.getElementById('bnStatus').textContent="Le bot tire..."; setTimeout(bnBotFire,700);}
+      }
+    }
+
+    function bnBotFire() {
+  if (!bnGameActive) return;
+  let possibles = [];
+  for (let r = 0; r < bnSize; r++) for (let c = 0; c < bnSize; c++) if (!bnShots[0][r][c]) possibles.push([r, c]);
+  if (possibles.length === 0) return;
+  let [r, c] = possibles[Math.floor(Math.random() * possibles.length)];
+  if (bnBoards[0][r][c] === 1) {
+    bnShots[0][r][c] = 2;
+    renderBNBoards();
+    if (bnCheckWin(0)) {
+      document.getElementById('bnStatus').textContent = "Le bot a gagné !";
+      bnGameActive = false;
+      return;
+    }
+    // Le bot a touché, il rejoue !
+    setTimeout(bnBotFire, 700);
+  } else {
+    bnShots[0][r][c] = 1;
+    bnTurn = 0;
+    renderBNBoards();
+    if (bnTurn === 0) document.getElementById('bnStatus').textContent = "À vous de tirer !";
+  }
+}
+
+    function bnCheckWin(idx) {
+      let count=0;
+      for(let r=0;r<bnSize;r++) for(let c=0;c<bnSize;c++) if(bnBoards[idx][r][c]===1 && bnShots[1-idx][r][c]===2) count++;
+      return count===bnShips*bnShipLen;
+    }
+
+    function resetBN() {
+      bnStep = 0;
+      bnBoards = [Array(bnSize).fill().map(()=>Array(bnSize).fill(0)), Array(bnSize).fill().map(()=>Array(bnSize).fill(0))];
+      bnShots = [Array(bnSize).fill().map(()=>Array(bnSize).fill(0)), Array(bnSize).fill().map(()=>Array(bnSize).fill(0))];
+      bnTurn = 0;
+      bnPlaced = 0;
+      bnCurrentShip = [];
+      bnGameActive = true;
+      document.getElementById('bnMenu').style.display = '';
+      document.getElementById('bnGame').style.display = 'none';
+    }
+  </script>
+  <br>
+    <a href="index.html" class="btn">Retourner sur le Portfolio</a>
+
+</body>
+</html>

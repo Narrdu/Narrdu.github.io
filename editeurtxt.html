@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Éditeur de texte</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f7fa; margin: 0; padding: 0; }
+    .toolbar {
+      background: #e3edff;
+      border-bottom: 1px solid #b3c6ff;
+      padding: 0.5em;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3em;
+      align-items: center;
+    }
+    .toolbar button, .toolbar select, .toolbar input[type="color"] {
+      border: 1px solid #b3c6ff;
+      background: #fff;
+      border-radius: 4px;
+      padding: 0.3em 0.6em;
+      font-size: 1em;
+      cursor: pointer;
+    }
+    .toolbar button:hover, .toolbar select:hover {
+      background: #d6e0ff;
+    }
+    #editor {
+      min-height: 400px;
+      background: #fff;
+      margin: 1em auto;
+      max-width: 900px;
+      border: 1px solid #b3c6ff;
+      border-radius: 6px;
+      padding: 1em;
+      outline: none;
+      font-size: 1.1em;
+      box-shadow: 0 2px 8px #e3edff;
+    }
+    .toolbar label { font-size: 0.95em; margin-right: 0.2em; }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <button onclick="execCmd('bold')" title="Gras"><b>G</b></button>
+    <button onclick="execCmd('italic')" title="Italique"><i>I</i></button>
+    <button onclick="execCmd('underline')" title="Souligné"><u>S</u></button>
+    <button onclick="execCmd('strikeThrough')" title="Barré"><s>S</s></button>
+    <span style="margin-left:1em"></span>
+    <button onclick="execCmd('justifyLeft')" title="Aligner à gauche">⯇</button>
+    <button onclick="execCmd('justifyCenter')" title="Centrer">≡</button>
+    <button onclick="execCmd('justifyRight')" title="Aligner à droite">⯈</button>
+    <button onclick="execCmd('justifyFull')" title="Justifier">⯀</button>
+    <span style="margin-left:1em"></span>
+    <button onclick="execCmd('insertUnorderedList')" title="Liste à puces">• Liste</button>
+    <button onclick="execCmd('insertOrderedList')" title="Liste numérotée">1. Liste</button>
+    <button onclick="execCmd('outdent')" title="Diminuer le retrait">←</button>
+    <button onclick="execCmd('indent')" title="Augmenter le retrait">→</button>
+    <span style="margin-left:1em"></span>
+    <button onclick="execCmdLink()" title="Lien">🔗</button>
+    <button onclick="execCmdImage()" title="Image">🖼️</button>
+    <span style="margin-left:1em"></span>
+    <label>Taille
+      <select onchange="execCmdArg('fontSize',this.value)">
+        <option value="3">Normal</option>
+        <option value="1">Petit</option>
+        <option value="2">Moyen</option>
+        <option value="4">Grand</option>
+        <option value="5">Très grand</option>
+        <option value="6">Énorme</option>
+        <option value="7">Maxi</option>
+      </select>
+    </label>
+    <label>Police
+      <select onchange="execCmdArg('fontName',this.value)">
+        <option value="Arial">Arial</option>
+        <option value="Times New Roman">Times</option>
+        <option value="Courier New">Courier</option>
+        <option value="Georgia">Georgia</option>
+        <option value="Verdana">Verdana</option>
+        <option value="Comic Sans MS">Comic Sans</option>
+      </select>
+    </label>
+    <label>Couleur
+      <input type="color" onchange="execCmdArg('foreColor',this.value)">
+    </label>
+    <label>Fond
+      <input type="color" onchange="execCmdArg('hiliteColor',this.value)">
+    </label>
+    <button onclick="execCmd('removeFormat')" title="Effacer le formatage">✖️</button>
+    <span style="margin-left:1em"></span>
+    <button onclick="saveDoc()" title="Télécharger">💾</button>
+    <button onclick="loadDoc()" title="Charger">📂</button>
+    <input type="file" id="fileInput" style="display:none" accept=".html,.txt">
+  </div>
+  <div id="editor" contenteditable="true"></div>
+  <script>
+    function execCmd(cmd) {
+      document.execCommand(cmd, false, null);
+    }
+    function execCmdArg(cmd, arg) {
+      document.execCommand(cmd, false, arg);
+    }
+    function execCmdLink() {
+      let url = prompt("Adresse du lien :");
+      if (url) document.execCommand('createLink', false, url);
+    }
+    function execCmdImage() {
+      let url = prompt("Adresse de l'image :");
+      if (url) document.execCommand('insertImage', false, url);
+    }
+    // Sauvegarde du contenu
+    function saveDoc() {
+      let content = document.getElementById('editor').innerHTML;
+      let blob = new Blob([content], {type: "text/html"});
+      let a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = "document.html";
+      a.click();
+    }
+    // Chargement d'un fichier
+    function loadDoc() {
+      document.getElementById('fileInput').click();
+    }
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+      let file = e.target.files[0];
+      if (!file) return;
+      let reader = new FileReader();
+      reader.onload = function(evt) {
+        document.getElementById('editor').innerHTML = evt.target.result;
+      };
+      reader.readAsText(file);
+    });
+  </script>
+</body>
+</html>

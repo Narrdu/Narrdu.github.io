@@ -1,0 +1,61 @@
+.apropos-main {
+  max-width: 400px;
+  margin: 3rem auto;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(45, 91, 227, 0.08);
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+
+.apropos-main h2 {
+  color: #000000;
+  margin-bottom: 2rem;
+  font-size: 1.7rem;
+}
+
+.apropos-links {
+  margin: 1.5rem 0;
+}
+
+.btn {
+  display: inline-block;
+  background: #4d4d4d;
+  color: #ffffff;
+  padding: 0.6em 1.2em;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 500;
+  margin: 0.5em 0;
+}
+
+
+
+.apropos-social {
+  margin: 1.5rem 0;
+}
+
+.apropos-social a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1em;
+  color: #303030;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.apropos-social a:hover {
+  color: #474747;
+}
+
+.apropos-social img {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(45, 91, 227, 0.08);
+}
+
+hr {
+  border: none;
+  border-top: 1px solid #e3edff;
+  margin: 2rem 0;
+}

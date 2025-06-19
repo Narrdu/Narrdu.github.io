@@ -1,0 +1,89 @@
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: linear-gradient(120deg, #f0f4f8 0%, #d9e7fa 100%);
+  color: #222;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+
+.navbar {
+  background: #313131;
+  color: #fff;
+  padding: 2rem 0 1rem 0;
+  box-shadow: 0 2px 8px rgba(45, 91, 227, 0.1);
+}
+
+.navbar h1 {
+  margin-bottom: 0.5rem;
+  font-size: 2.2rem;
+  letter-spacing: 2px;
+}
+
+.btn {
+  display: inline-block;
+  background: #fff;
+  color: #2d5be3;
+  padding: 0.6em 1.2em;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 500;
+  margin: 1em 0.5em;
+  border: 2px solid rgb(255, 255, 255);
+}
+
+.btn:hover {
+  background: #fff;
+  color: #2d5be3;
+}
+
+.separator {
+  height: 2px;
+  background: #e3edff;
+  margin: 2rem auto;
+  width: 60%;
+  border-radius: 2px;
+}
+
+.social-links {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.social-btn {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  background: #f8faff;
+  padding: 1em 2em;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(45, 91, 227, 0.04);
+  color: #000000;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.social-btn:hover {
+  background: #f8faff;
+  color: #000000;
+}
+
+.social-btn img {
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(45, 91, 227, 0.08);
+}
+
+.return-btn {
+  margin-top: 2rem;
+}
+
+#clock {
+  margin: 2rem;
+  font-size: 1.2rem;
+  color: #000000;
+  font-weight: bold;
+}

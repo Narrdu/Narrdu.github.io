@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Mini Réseau Social</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f7fa; margin: 0; }
+    header { background: #222; color: #fff; padding: 1em 0; text-align: center; font-size: 2em; letter-spacing: 2px; }
+    #main { max-width: 600px; margin: 2em auto; background: #fff; border-radius: 10px; box-shadow: 0 2px 12px #b3c6ff44; padding: 2em; }
+    #login, #signup { margin-bottom: 2em; }
+    #login input, #signup input { margin: 0.2em 0.5em 0.2em 0; padding: 0.5em; border-radius: 5px; border: 1px solid #b3c6ff; }
+    #login button, #signup button, #logoutBtn, #tweetBtn { background: #2d5be3; color: #fff; border: none; border-radius: 5px; padding: 0.5em 1.2em; cursor: pointer; }
+    #login button:hover, #signup button:hover, #logoutBtn:hover, #tweetBtn:hover { background: #1741a6; }
+    #tweetBox { display: flex; gap: 0.5em; margin-bottom: 1.5em; }
+    #tweetInput { flex: 1; padding: 0.7em; border-radius: 8px; border: 1px solid #b3c6ff; font-size: 1.1em; }
+    #tweetFile { max-width: 120px; }
+    #tweetBtn { font-size: 1.1em; }
+    .tweet { background: #f5f7fa; border-radius: 8px; margin-bottom: 1em; padding: 1em; border: 1px solid #e3edff; position: relative; }
+    .tweet .author { font-weight: bold; color: #2d5be3; }
+    .tweet .date { color: #888; font-size: 0.9em; margin-left: 0.5em; }
+    .tweet .actions { margin-top: 0.7em; }
+    .tweet .actions button { background: none; border: none; color: #2d5be3; cursor: pointer; font-size: 1em; margin-right: 1em; }
+    .tweet .actions button.liked { color: #e74c3c; }
+    .tweet .replyBox { margin-top: 0.7em; }
+    .tweet .replyInput { width: 80%; padding: 0.4em; border-radius: 5px; border: 1px solid #b3c6ff; }
+    .tweet .replyBtn { background: #2d5be3; color: #fff; border: none; border-radius: 5px; padding: 0.3em 1em; margin-left: 0.5em; cursor: pointer; }
+    .tweet .replies { margin-top: 0.7em; margin-left: 1.5em; }
+    .tweet .reply { background: #fff; border-radius: 6px; margin-bottom: 0.5em; padding: 0.5em; border: 1px solid #e3edff; }
+    .tweet .reply .author { color: #1741a6; }
+    #logoutBtn { float: right; margin-top: -2.5em; }
+    #userWelcome { float: left; margin-top: -2.5em; color: #2d5be3; font-weight: bold; }
+    @media (max-width: 700px) {
+      #main { padding: 0.5em; }
+      #tweetBox { flex-direction: column; }
+      #logoutBtn, #userWelcome { float: none; margin-top: 0; }
+    }
+    img.tweet-img { max-width:100%; max-height:250px; margin-top:0.5em; border-radius:8px; }
+    .tweet-file-link { display:inline-block; margin-top:0.5em; background:#e3edff; padding:0.3em 0.7em; border-radius:6px; color:#2d5be3; text-decoration:none; font-size:0.98em; }
+  </style>
+</head>
+<body>
+  <header>Mini Réseau Social</header>
+  <div id="main">
+    <div id="login" style="display:none;">
+      <h2>Connexion</h2>
+      <input type="text" id="loginUser" placeholder="Nom d'utilisateur">
+      <input type="password" id="loginPass" placeholder="Mot de passe">
+      <button onclick="login()">Se connecter</button>
+      <span style="margin-left:1em;">ou <a href="#" onclick="showSignup();return false;">Créer un compte</a></span>
+    </div>
+    <div id="signup" style="display:none;">
+      <h2>Créer un compte</h2>
+      <input type="text" id="signupUser" placeholder="Nom d'utilisateur">
+      <input type="password" id="signupPass" placeholder="Mot de passe">
+      <button onclick="signup()">Créer</button>
+      <span style="margin-left:1em;"><a href="#" onclick="showLogin();return false;">Déjà inscrit ?</a></span>
+    </div>
+    <div id="app" style="display:none;">
+      <span id="userWelcome"></span>
+      <button id="logoutBtn" onclick="logout()">Déconnexion</button>
+      <div id="tweetBox">
+        <input id="tweetInput" maxlength="280" placeholder="Quoi de neuf ?" autocomplete="off">
+        <input type="file" id="tweetFile" style="max-width:120px;">
+        <button id="tweetBtn" onclick="postTweet()">Tweeter</button>
+      </div>
+      <div id="tweets"></div>
+    </div>
+  </div>
+  <script>
+    // --- Stockage local (localStorage) ---
+    let users = JSON.parse(localStorage.getItem('users') || '{}');
+    let tweets = JSON.parse(localStorage.getItem('tweets') || '[]');
+    let currentUser = localStorage.getItem('currentUser') || null;
+
+    // --- Authentification ---
+    function showLogin() {
+      document.getElementById('login').style.display = '';
+      document.getElementById('signup').style.display = 'none';
+      document.getElementById('app').style.display = 'none';
+    }
+    function showSignup() {
+      document.getElementById('login').style.display = 'none';
+      document.getElementById('signup').style.display = '';
+      document.getElementById('app').style.display = 'none';
+    }
+    function showApp() {
+      document.getElementById('login').style.display = 'none';
+      document.getElementById('signup').style.display = 'none';
+      document.getElementById('app').style.display = '';
+      document.getElementById('userWelcome').textContent = "Bienvenue, " + currentUser;
+      renderTweets();
+    }
+    function login() {
+      let u = document.getElementById('loginUser').value.trim();
+      let p = document.getElementById('loginPass').value;
+      if (!users[u] || users[u].pass !== p) {
+        alert("Identifiants incorrects !");
+        return;
+      }
+      currentUser = u;
+      localStorage.setItem('currentUser', currentUser);
+      showApp();
+    }
+    function signup() {
+      let u = document.getElementById('signupUser').value.trim();
+      let p = document.getElementById('signupPass').value;
+      if (!u || !p) { alert("Remplis tous les champs."); return; }
+      if (users[u]) { alert("Ce nom existe déjà."); return; }
+      users[u] = { pass: p };
+      localStorage.setItem('users', JSON.stringify(users));
+      alert("Compte créé !");
+      showLogin();
+    }
+    function logout() {
+      currentUser = null;
+      localStorage.removeItem('currentUser');
+      showLogin();
+    }
+
+    // --- Tweets avec fichier/image ---
+    function postTweet() {
+      let txt = document.getElementById('tweetInput').value.trim();
+      let fileInput = document.getElementById('tweetFile');
+      let tweetBtn = document.getElementById('tweetBtn');
+      tweetBtn.disabled = true;
+      if (fileInput.files.length) {
+        let file = fileInput.files[0];
+        let reader = new FileReader();
+        reader.onload = function(e) {
+          addTweet(txt, {
+            name: file.name,
+            type: file.type,
+            data: e.target.result
+          });
+          tweetBtn.disabled = false;
+        };
+        reader.onerror = function() {
+          alert("Erreur lors de la lecture du fichier.");
+          tweetBtn.disabled = false;
+        };
+        try {
+          reader.readAsDataURL(file);
+        } catch (err) {
+          alert("Ce type de fichier n'est pas supporté.");
+          tweetBtn.disabled = false;
+        }
+      } else {
+        addTweet(txt, null);
+        tweetBtn.disabled = false;
+      }
+    }
+    function addTweet(txt, fileObj) {
+      tweets.unshift({
+        id: Date.now() + Math.random().toString(36).substr(2,5),
+        author: currentUser,
+        text: txt,
+        date: new Date().toLocaleString(),
+        likes: [],
+        replies: [],
+        file: fileObj || null
+      });
+      localStorage.setItem('tweets', JSON.stringify(tweets));
+      document.getElementById('tweetInput').value = '';
+      document.getElementById('tweetFile').value = '';
+      renderTweets();
+    }
+    function renderTweets() {
+      let html = '';
+      for (let t of tweets) {
+        html += `<div class="tweet" id="tweet-${t.id}">
+          <span class="author">@${t.author}</span>
+          <span class="date">${t.date}</span>
+          <div class="text" style="margin:0.7em 0 0.3em 0;">${escapeHTML(t.text)}
+          ${renderFile(t.file)}
+          </div>
+          <div class="actions">
+            <button onclick="likeTweet('${t.id}')" class="${t.likes.includes(currentUser)?'liked':''}">♥ ${t.likes.length}</button>
+            <button onclick="showReplyBox('${t.id}')">💬 Répondre</button>
+            ${t.author===currentUser?`<button onclick="deleteTweet('${t.id}')">🗑️ Supprimer</button>`:''}
+          </div>
+          <div class="replyBox" id="replyBox-${t.id}" style="display:none;">
+            <input class="replyInput" id="replyInput-${t.id}" maxlength="180" placeholder="Votre réponse...">
+            <button class="replyBtn" onclick="postReply('${t.id}')">Envoyer</button>
+          </div>
+          <div class="replies">${renderReplies(t.replies)}</div>
+        </div>`;
+      }
+      document.getElementById('tweets').innerHTML = html;
+    }
+    function renderFile(file) {
+      if (!file) return '';
+      if (file.type.startsWith('image/')) {
+        return `<div><img src="${file.data}" alt="image" class="tweet-img"></div>`;
+      } else {
+        return `<a class="tweet-file-link" href="${file.data}" download="${file.name}">📎 ${escapeHTML(file.name)}</a>`;
+      }
+    }
+    function likeTweet(id) {
+      let t = tweets.find(t=>t.id===id);
+      if (!t) return;
+      let idx = t.likes.indexOf(currentUser);
+      if (idx === -1) t.likes.push(currentUser);
+      else t.likes.splice(idx,1);
+      localStorage.setItem('tweets', JSON.stringify(tweets));
+      renderTweets();
+    }
+    function showReplyBox(id) {
+      document.querySelectorAll('.replyBox').forEach(e=>e.style.display='none');
+      document.getElementById('replyBox-'+id).style.display = '';
+      document.getElementById('replyInput-'+id).focus();
+    }
+    function postReply(id) {
+      let t = tweets.find(t=>t.id===id);
+      if (!t) return;
+      let txt = document.getElementById('replyInput-'+id).value.trim();
+      if (!txt) return;
+      t.replies.push({
+        author: currentUser,
+        text: txt,
+        date: new Date().toLocaleString()
+      });
+      localStorage.setItem('tweets', JSON.stringify(tweets));
+      renderTweets();
+    }
+    function renderReplies(replies) {
+      if (!replies || !replies.length) return '';
+      let html = '';
+      for (let r of replies) {
+        html += `<div class="reply">
+          <span class="author">@${r.author}</span>
+          <span class="date">${r.date}</span>
+          <div>${escapeHTML(r.text)}</div>
+        </div>`;
+      }
+      return html;
+    }
+    function deleteTweet(id) {
+      if (!confirm("Supprimer ce tweet ?")) return;
+      tweets = tweets.filter(t=>t.id!==id);
+      localStorage.setItem('tweets', JSON.stringify(tweets));
+      renderTweets();
+    }
+    function escapeHTML(str) {
+      return str.replace(/[&<>"']/g, function(m) {
+        return ({
+          '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+        })[m];
+      });
+    }
+
+    // --- Initialisation ---
+    if (!currentUser) showLogin();
+    else showApp();
+
+    // Rendez les fonctions accessibles dans le HTML inline
+    window.showSignup = showSignup;
+    window.showLogin = showLogin;
+    window.logout = logout;
+    window.postTweet = postTweet;
+    window.likeTweet = likeTweet;
+    window.showReplyBox = showReplyBox;
+    window.postReply = postReply;
+    window.deleteTweet = deleteTweet;
+  </script>
+</body>
+</html>
