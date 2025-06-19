@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Partage de fichiers P2P instantané</title>
+  <script src="https://cdn.jsdelivr.net/npm/webtorrent@latest/webtorrent.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f7fa; margin: 0; }
+    .container { max-width: 500px; margin: 3em auto; background: #fff; border-radius: 10px; box-shadow: 0 2px 12px #b3c6ff44; padding: 2em; }
+    h1 { text-align: center; color: #2d5be3; }
+    label { font-weight: bold; }
+    input[type="file"], input[type="text"] { margin: 0.5em 0 1em 0; width: 100%; padding: 0.5em; border-radius: 5px; border: 1px solid #b3c6ff; }
+    button { background: #2d5be3; color: #fff; border: none; border-radius: 5px; padding: 0.6em 1.5em; font-size: 1em; cursor: pointer; }
+    button:hover { background: #1741a6; }
+    .magnet { font-size: 1em; color: #1741a6; font-weight: bold; margin: 1em 0; text-align: center; word-break: break-all; }
+    .error { color: #e74c3c; margin: 1em 0; text-align: center; }
+    .success { color: #27ae60; margin: 1em 0; text-align: center; }
+    .progress-bar-bg {
+      width: 100%; height: 18px; background: #e3edff; border-radius: 8px; margin-top: 1em; margin-bottom: 1em;
+    }
+    .progress-bar {
+      height: 100%; background: #2d5be3; border-radius: 8px; width: 0%;
+      transition: width 0.2s;
+    }
+    .progress-label {
+      text-align: center; font-size: 0.95em; color: #1741a6; margin-top: 0.3em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Partage de fichiers P2P</h1>
+    <div id="uploadSection">
+      <label for="fileInput">Choisir un fichier à partager :</label>
+      <input type="file" id="fileInput">
+      <button onclick="shareFile()">Partager</button>
+      <div id="uploadMsg"></div>
+    </div>
+    <hr>
+    <div>
+      <label for="magnetInput">Coller un code de partage (magnet link) :</label>
+      <input type="text" id="magnetInput" placeholder="Colle ici le code reçu">
+      <button onclick="downloadFile()">Télécharger</button>
+      <div id="downloadMsg"></div>
+    </div>
+  </div>
+  <script>
+    const client = new WebTorrent();
+
+    function shareFile() {
+      let fileInput = document.getElementById('fileInput');
+      let msg = document.getElementById('uploadMsg');
+      msg.innerHTML = `
+        <div>Préparation du partage...</div>
+        <div class="progress-bar-bg"><div class="progress-bar" id="prepBar"></div></div>
+        <div class="progress-label" id="prepLabel">0%</div>
+      `;
+      if (!fileInput.files.length) {
+        msg.innerHTML = '<div class="error">Aucun fichier sélectionné.</div>';
+        return;
+      }
+      let file = fileInput.files[0];
+
+      // Progression de la préparation (lecture du fichier)
+      let reader = new FileReader();
+      reader.onprogress = function(e) {
+        if (e.lengthComputable) {
+          let percent = Math.round((e.loaded / e.total) * 100);
+          document.getElementById('prepBar').style.width = percent + "%";
+          document.getElementById('prepLabel').textContent = percent + "%";
+        }
+      };
+      reader.onload = function(e) {
+        // Une fois le fichier lu, on seed avec WebTorrent
+        document.getElementById('prepBar').style.width = "100%";
+        document.getElementById('prepLabel').textContent = "100%";
+        // On crée un nouveau File à partir du résultat pour garder le nom
+        let blob = new Blob([e.target.result]);
+        let preparedFile = new File([blob], file.name, {type: file.type});
+        msg.innerHTML = `
+          <div>Préparation du partage (WebTorrent)...</div>
+          <div class="progress-bar-bg"><div class="progress-bar" id="prepBar"></div></div>
+          <div class="progress-label" id="prepLabel">0%</div>
+        `;
+        // WebTorrent ne fournit pas de progression de seed, donc on affiche une barre indéterminée
+        let bar = document.getElementById('prepBar');
+        let label = document.getElementById('prepLabel');
+        let fakeProgress = 0;
+        let interval = setInterval(() => {
+          fakeProgress = Math.min(99, fakeProgress + Math.random() * 5);
+          bar.style.width = fakeProgress + "%";
+          label.textContent = Math.round(fakeProgress) + "%";
+        }, 120);
+        client.seed(preparedFile, torrent => {
+          clearInterval(interval);
+          bar.style.width = "100%";
+          label.textContent = "100%";
+          msg.innerHTML = `<div class="success">Fichier prêt à être partagé !</div>
+            <div class="magnet">${torrent.magnetURI}</div>
+            <div style="font-size:0.95em;text-align:center;">Copie ce code et partage-le.<br>Le destinataire pourra télécharger le fichier tant que cette page reste ouverte.</div>`;
+          fileInput.value = '';
+        }, err => {
+          clearInterval(interval);
+          if (err) {
+            msg.innerHTML = '<div class="error">Erreur lors du partage du fichier.</div>';
+          }
+        });
+      };
+      reader.onerror = function() {
+        msg.innerHTML = '<div class="error">Erreur lors de la lecture du fichier.</div>';
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function downloadFile() {
+      let input = document.getElementById('magnetInput');
+      let msg = document.getElementById('downloadMsg');
+      msg.innerHTML = '';
+      let magnet = input.value.trim();
+      if (!magnet) {
+        msg.innerHTML = '<div class="error">Colle un code de partage.</div>';
+        return;
+      }
+      msg.innerHTML = "Connexion au partage...";
+      client.add(magnet, torrent => {
+        if (!torrent.files.length) {
+          msg.innerHTML = '<div class="error">Aucun fichier trouvé dans ce partage.</div>';
+          return;
+        }
+        torrent.files.forEach(file => {
+          file.getBlobURL((err, url) => {
+            if (err) {
+              msg.innerHTML = '<div class="error">Erreur lors du téléchargement.</div>';
+              return;
+            }
+            let a = document.createElement('a');
+            a.href = url;
+            a.download = file.name;
+            a.textContent = "Télécharger " + file.name;
+            a.style.display = "block";
+            msg.innerHTML = `<div class="success">Fichier prêt :</div>`;
+            msg.appendChild(a);
+          });
+        });
+      }).on('error', function(err) {
+        msg.innerHTML = '<div class="error">Erreur lors de la connexion au partage.<br>' + err.message + '</div>';
+      });
+    }
+  </script>
+</body>
+</html>
